@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">    
+    <meta name="description" content="">
+    <meta name="author" content="">    
+
+    <title>Django Example Demo</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.min.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+          
+
+      <svg id="graph" style="width: 80%; height: 500px; margin-left: 10%">
+      </svg>
+          
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>    
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.11/d3.js"></script>   
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.min.js"></script>
+    <script>
+
+      //we abstract away the act of actually drawing the graph, so we can pass in data from anywhere
+      function drawData(data) {
+        var chart = c3.generate({
+            data: data,
+            bindto: "#graph"
+        });
+      }
+
+      //here, we have the data accessible in Javascript itself
+      function drawDataFromClient() {        
+        var data = {
+                columns: [
+                    ['data1', 30, 200, 100, 400, 150, 250],
+                    ['data2', 50, 20, 10, 40, 15, 25]
+                ]
+            };
+
+        drawData(data);
+      }
+
+      //here, we must make a request to the server to get the data
+      function drawDataFromServer() {
+        //here we make an AJAX (asychronous) request to the server asking for some data, and then
+        //draw the data which we recieve
+
+        //if we wanted to include parameters, we could add them here
+        var params = {};
+
+        $.ajax({
+          type: "POST",
+          url: "/get_data/",
+          data: params,
+          cache: false,
+          complete: function(response) {            
+
+            //let's inspect the response we get
+            console.log(response);          
+
+            //the response text contains the actual data, which we will attempt to parse as JSON
+            var parsed = $.parseJSON(response["responseText"]);
+            console.log(parsed);
+
+            drawData(parsed);
+            
+          }
+        }).done(function() {
+            console.log( "success" );
+          })
+          .fail(function() {
+            console.log( "error" );
+          })
+          .always(function() {
+            console.log( "complete" );
+          });
+      }
+
+      $(document).ready(function() {
+          //to allow CSRF requests
+          $.ajaxSetup({
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}' },
+          }); 
+
+      })
+    </script> 
+  </body>
+</html>
